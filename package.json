@@ -1,0 +1,8 @@
+{
+  "name": "Chai-Backend",
+  "version": "1.0.0",
+  "description": "A backend course by Chai aur code YT channel",
+  "main": "index.js",
+  "author": "Karan Sarvaiya",
+  "license": "MIT"
+}
