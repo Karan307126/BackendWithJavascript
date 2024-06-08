@@ -11,7 +11,7 @@ dbConnect()
     });
 
     app.listen(port, () => {
-      console.log(`Server connected at port : ${port}`);
+      console.log(`⚙️ Server connected at port : ${port}`);
     });
   })
   .catch((error) => {

@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema(
       required: [true, "Password is required!"],
     },
     refreshToken: {
-      type: string,
+      type: String,
       required: true,
     },
   },
@@ -51,7 +51,7 @@ const userSchema = new mongoose.Schema(
 
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
-    this.password = bcrypt.hash(this.password, 16);
+    this.password = await bcrypt.hash(this.password, 16);
   }
   next();
 });
