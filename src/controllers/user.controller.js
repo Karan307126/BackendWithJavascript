@@ -294,15 +294,12 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   if (!avatar.url)
     throw new ApiError(400, "Error while uploading on cloudinary");
 
-  const newUser = await User.findByIdAndUpdate(
-    req.user?._id,
-    { $set: { avatar: avatar.url } },
-    { new: true }
-  ).select("-password");
+  user.avatar = avatar.url;
+  await user.save({ validateBeforeSave: false });
 
   return res
     .status(200)
-    .json(new ApiResponse(200, newUser, "Avatar updated successfully"));
+    .json(new ApiResponse(200, user, "Avatar updated successfully"));
 });
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
@@ -326,15 +323,12 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
   if (!coverImage.url)
     throw new ApiError(400, "Error while uploading on cloudinary");
 
-  const newUser = await User.findByIdAndUpdate(
-    req.user?._id,
-    { $set: { coverImage: coverImage.url } },
-    { new: true }
-  ).select("-password");
+  user.coverImage = coverImage.url;
+  await user.save({ validateBeforeSave: false });
 
   return res
     .status(200)
-    .json(new ApiResponse(200, newUser, "CoverImage updated successfully"));
+    .json(new ApiResponse(200, user, "CoverImage updated successfully"));
 });
 
 export {
