@@ -331,6 +331,81 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "CoverImage updated successfully"));
 });
 
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  /*
+   1. Extract userName from the params
+   2. Find the user based on userName
+   3. Calculate the count of the subscribes base on channel field of subscription modal
+   4. Calculate the count of subscribed channel count by this channel based on subscriber field of subscription modal
+   5. Get the value for is user is subscribed or not to channel 
+   6. Add all of the fields to the user modal through the join 
+   7. Send response bake to frontend
+  */
+
+  const { userName } = req.params;
+
+  if (!userName) throw new ApiError(400, "Username is not exists");
+
+  const channel = await User.aggregate([
+    {
+      $match: {
+        userName: userName.toLowerCase(),
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers",
+        },
+        channelSubscribedToCount: {
+          $size: "$subscribedTo",
+        },
+        isSubscribed: {
+          if: { $in: [req.user?._id, subscribers.subscriber] },
+          then: true,
+          else: false,
+        },
+      },
+    },
+    {
+      $project: {
+        fullName: 1,
+        userName: 1,
+        email: 1,
+        avatar: 1,
+        coverImage: 1,
+        subscribersCount: 1,
+        channelSubscribedToCount: 1,
+        isSubscribed: 1,
+      },
+    },
+  ]);
+
+  if (!channel?.length) throw new ApiError(400, "Channel does not exists");
+
+  console.log("Channel : ", channel);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, channel[0], "Get channel profile successfully"));
+});
+
 export {
   registerUser,
   loginUser,
@@ -341,4 +416,5 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
+  getUserChannelProfile,
 };
