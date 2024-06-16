@@ -149,7 +149,7 @@ const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user?._id,
     {
-      $set: { refreshToken: undefined },
+      $unset: { refreshToken: 1 },
     },
     {
       new: true,
@@ -252,22 +252,29 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
   if (!fullName || !email) throw new ApiError(400, "All fields are required");
 
-  const user = await User.findByIdAndUpdate(
-    req.user._id,
-    {
-      $set: {
-        fullName,
-        email,
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: {
+          fullName,
+          email,
+        },
       },
-    },
-    {
-      new: true,
-    }
-  ).select("-password");
+      {
+        new: true,
+      }
+    ).select("-password");
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, user, "Account details updated successfully"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, user, "Account details updated successfully"));
+  } catch (error) {
+    throw new ApiError(
+      500,
+      "Something went wrong while updating account details"
+    );
+  }
 });
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
@@ -336,16 +343,16 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
   /*
    1. Extract userName from the params
    2. Find the user based on userName
-   3. Calculate the count of the subscribes base on channel field of subscription modal
-   4. Calculate the count of subscribed channel count by this channel based on subscriber field of subscription modal
-   5. Get the value for is user is subscribed or not to channel 
-   6. Add all of the fields to the user modal through the join 
-   7. Send response bake to frontend
+   3. Calculate the count of the subscribes base on channel field of subscription model
+   4. Calculate the count of subscribed channel count by this channel based on subscriber field of subscription model
+   5. Get the value for if user is subscribed or not to channel 
+   6. Add all of the fields to the user model through the join 
+   7. Send response back to frontend
   */
 
   const { userName } = req.params;
 
-  if (!userName) throw new ApiError(400, "Username is not exists");
+  if (!userName) throw new ApiError(400, "Username does not exist");
 
   const channel = await User.aggregate([
     {
@@ -378,9 +385,13 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
           $size: "$subscribedTo",
         },
         isSubscribed: {
-          if: { $in: [req.user?._id, subscribers.subscriber] },
-          then: true,
-          else: false,
+          $cond: {
+            if: {
+              $in: [req.user?._id, "$subscribers.subscriber"],
+            },
+            then: true,
+            else: false,
+          },
         },
       },
     },
@@ -398,7 +409,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     },
   ]);
 
-  if (!channel?.length) throw new ApiError(400, "Channel does not exists");
+  if (!channel.length) throw new ApiError(400, "Channel does not exist");
 
   console.log("Channel : ", channel);
 
@@ -416,10 +427,14 @@ const getUserWatchHistory = asyncHandler(async (req, res) => {
    5. Send as response to the frontend
   */
 
+  if (!req.user || !req.user._id) {
+    throw new ApiError(400, "User ID is not provided");
+  }
+
   const user = await User.aggregate([
     {
       $match: {
-        _id: mongoose.Types.ObjectId(req.user._id),
+        _id: new mongoose.Types.ObjectId(req.user._id),
       },
     },
     {
@@ -457,6 +472,10 @@ const getUserWatchHistory = asyncHandler(async (req, res) => {
       },
     },
   ]);
+
+  if (!user.length) {
+    throw new ApiError(404, "User not found");
+  }
 
   return res
     .status(200)

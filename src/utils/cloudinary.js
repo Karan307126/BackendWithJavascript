@@ -10,7 +10,7 @@ cloudinary.config({
 const extractPublicId = (publicUrl) => {
   const pathSegments = publicUrl.split("/");
   const versionIndex = pathSegments.findIndex((segment) =>
-    segment.startWith("v")
+    segment.startsWith("v")
   );
   if (versionIndex !== -1) pathSegments.splice(versionIndex, 1);
 
@@ -49,8 +49,9 @@ const deleteOnCloudinary = async (publicUrl) => {
     // Delete the file on cloudinary
 
     const response = await cloudinary.uploader.destroy(publicId, {
-      resource_type: "auto",
+      resource_type: "image",
     });
+
     return response;
   } catch (error) {
     console.error("Deletion Error: ", error);
