@@ -109,11 +109,53 @@ const addComment = asyncHandler(async (req, res) => {
 });
 
 const updateComment = asyncHandler(async (req, res) => {
-  // TODO: update a comment
+  /*
+   1. Get comment Id from the request params and new comment content from request body
+   2. Find comment from database through commentId and Update it with new content
+   3. Send response to the frontend
+  */
+  const { content } = req.body;
+  const { commentId } = req.params;
+
+  if (!commentId) throw new ApiError(400, "Comment Id is required.");
+  if (!content) throw new ApiError(400, "Content is required.");
+
+  const updatedComment = await Comment.findByIdAndUpdate(
+    commentId,
+    {
+      $set: {
+        content,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+
+  if (!updatedComment) throw new ApiError(404, "Comment Id not found.");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedComment, "Comment update successfully"));
 });
 
 const deleteComment = asyncHandler(async (req, res) => {
-  // TODO: delete a comment
+  /*
+   1. Get comment Id from request params 
+   2. Find in database and delete that comment from the database
+  */
+
+  const { commentId } = req.params;
+
+  if (!commentId) throw new ApiError(400, "Comment id is require.");
+
+  const deletedComment = await Comment.findByIdAndDelete(commentId);
+
+  if (!deletedComment) throw new ApiError(404, "Comment not found.");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Comment deleted successfully."));
 });
 
 export { getVideoComment, addComment, updateComment, deleteComment };
