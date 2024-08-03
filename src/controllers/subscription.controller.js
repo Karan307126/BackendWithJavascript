@@ -9,6 +9,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
   const user = req.user;
 
+  if (!channelId) throw new ApiError(400, "ChannelId is required");
   if (!isValidObjectId(channelId))
     throw new ApiError(400, "Invalid channel id");
 
@@ -47,7 +48,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   const subscribers = await Subscription.aggregate([
     {
       $match: {
-        channel: channelId,
+        channel: mongoose.Types.ObjectId(channelId),
       },
     },
     {
@@ -97,7 +98,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
   const channels = await Subscription.aggregate([
     {
       $match: {
-        subscriber: subscriberId,
+        subscriber: mongoose.Types.ObjectId(subscriberId),
       },
     },
     {

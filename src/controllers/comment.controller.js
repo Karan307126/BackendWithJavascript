@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import { Comment } from "../models/comment.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -17,6 +17,7 @@ const getVideoComment = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
 
   if (!videoId) throw new ApiError(400, "Video id is required");
+  if (!isValidObjectId(videoId)) throw new ApiError(400, "Invalid VideoId");
 
   const pageNumber = parseInt(page);
   const limitNumber = parseInt(limit);
@@ -24,7 +25,7 @@ const getVideoComment = asyncHandler(async (req, res) => {
   const comments = await Comment.aggregate([
     {
       $match: {
-        video: videoId,
+        video: mongoose.Types.ObjectId(videoId),
       },
     },
     {
@@ -49,6 +50,11 @@ const getVideoComment = asyncHandler(async (req, res) => {
         userName: 1,
         createdAt: 1,
         updatedAt: 1,
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
       },
     },
     {
@@ -85,6 +91,9 @@ const addComment = asyncHandler(async (req, res) => {
   const user = req.user;
 
   if (!user) throw new ApiError(404, "User not found");
+  if (!videoId) throw new ApiError(400, "VideoId is required");
+  if (!content) throw new ApiError(400, "Content is required");
+  if (!isValidObjectId(videoId)) throw new ApiError(400, "Invalid VideoId");
 
   const comment = new Comment({
     video: videoId,
@@ -119,6 +128,8 @@ const updateComment = asyncHandler(async (req, res) => {
 
   if (!commentId) throw new ApiError(400, "Comment Id is required.");
   if (!content) throw new ApiError(400, "Content is required.");
+  if (!isValidObjectId(commentId))
+    throw new ApiError(400, "Invalid CommentId.");
 
   const updatedComment = await Comment.findByIdAndUpdate(
     commentId,
@@ -148,6 +159,8 @@ const deleteComment = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
 
   if (!commentId) throw new ApiError(400, "Comment id is require.");
+  if (!isValidObjectId(commentId))
+    throw new ApiError(400, "Invalid commentId.");
 
   const deletedComment = await Comment.findByIdAndDelete(commentId);
 

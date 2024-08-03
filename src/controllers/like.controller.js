@@ -14,6 +14,7 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const user = req.user;
 
+  if (!videoId) throw new ApiError(400, "VideoId is required");
   if (!isValidObjectId(videoId)) throw new ApiError(400, "Invalid video id");
 
   const existingLike = await Like.findOne({
@@ -40,11 +41,12 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
   const user = req.user;
 
+  if (!commentId) throw new ApiError(400, "CommentId is required");
   if (!isValidObjectId(commentId))
     throw new ApiError(400, "Invalid comment id.");
 
   const existingCommentLike = await Like.findOne({
-    comment: commentId,
+    comment: mongoose.Types.ObjectId(commentId),
     likedBy: user._id,
   });
 
@@ -71,10 +73,11 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
   const { tweetId } = req.params;
   const user = req.user;
 
+  if (!tweetId) throw new ApiError(400, "TweetId is required.");
   if (!isValidObjectId(tweetId)) throw new ApiError(400, "Invalid tweet id.");
 
   const existingTweetLike = await Like.findOne({
-    tweet: tweetId,
+    tweet: mongoose.Types.ObjectId(tweetId),
     likedBy: user._id,
   });
 
@@ -98,10 +101,12 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
 const getLikedVideos = asyncHandler(async (req, res) => {
   const user = req.user;
 
+  if (!user) throw new ApiError(404, "User not found");
+
   const likedAllVideos = await Like.aggregate([
     {
       $match: {
-        likedBy: user._id,
+        likedBy: mongoose.Types.ObjectId(user._id),
       },
     },
     {

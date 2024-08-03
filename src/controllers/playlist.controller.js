@@ -8,6 +8,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
   const { name, description } = req.body;
   const userId = req.user._id;
 
+  if (!userId) throw new ApiError(404, "User not found");
   if (!name) throw new ApiError(400, "Playlist name required");
 
   const newPlaylist = new Playlist({
@@ -28,8 +29,11 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
   if (!userId) throw new ApiError(400, "User Id is required");
+  if (!isValidObjectId(userId)) throw new ApiError(400, "Invalid UserId");
 
-  const playlists = await Playlist.find({ owner: userId });
+  const playlists = await Playlist.find({
+    owner: mongoose.Types.ObjectId(userId),
+  });
 
   if (playlists.length === 0)
     return res
