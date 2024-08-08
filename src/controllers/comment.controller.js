@@ -4,7 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-const getVideoComment = asyncHandler(async (req, res) => {
+const getVideoComments = asyncHandler(async (req, res) => {
   /*
   1. Extract videoId from the params
   2. Find the video details based on videoId
@@ -171,4 +171,4 @@ const deleteComment = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "Comment deleted successfully."));
 });
 
-export { getVideoComment, addComment, updateComment, deleteComment };
+export { getVideoComments, addComment, updateComment, deleteComment };
