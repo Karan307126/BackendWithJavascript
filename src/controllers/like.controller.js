@@ -46,7 +46,7 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid comment id.");
 
   const existingCommentLike = await Like.findOne({
-    comment: mongoose.Types.ObjectId(commentId),
+    comment: new mongoose.Types.ObjectId(commentId),
     likedBy: user._id,
   });
 
@@ -77,7 +77,7 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
   if (!isValidObjectId(tweetId)) throw new ApiError(400, "Invalid tweet id.");
 
   const existingTweetLike = await Like.findOne({
-    tweet: mongoose.Types.ObjectId(tweetId),
+    tweet: new mongoose.Types.ObjectId(tweetId),
     likedBy: user._id,
   });
 
@@ -106,7 +106,7 @@ const getLikedVideos = asyncHandler(async (req, res) => {
   const likedAllVideos = await Like.aggregate([
     {
       $match: {
-        likedBy: mongoose.Types.ObjectId(user._id),
+        likedBy: new mongoose.Types.ObjectId(user._id),
       },
     },
     {

@@ -32,7 +32,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
   if (!isValidObjectId(userId)) throw new ApiError(400, "Invalid UserId");
 
   const playlists = await Playlist.find({
-    owner: mongoose.Types.ObjectId(userId),
+    owner: new mongoose.Types.ObjectId(userId),
   });
 
   if (playlists.length === 0)

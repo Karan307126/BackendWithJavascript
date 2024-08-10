@@ -25,7 +25,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
   const comments = await Comment.aggregate([
     {
       $match: {
-        video: mongoose.Types.ObjectId(videoId),
+        video: new mongoose.Types.ObjectId(videoId),
       },
     },
     {
@@ -65,7 +65,8 @@ const getVideoComments = asyncHandler(async (req, res) => {
     },
   ]);
 
-  if (!comments) throw new ApiError(404, "There are no comments on this video");
+  if (comments.length === 0)
+    throw new ApiError(404, "There are no comments on this video");
 
   console.log("Comments : ", comments);
 

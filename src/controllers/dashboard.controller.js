@@ -92,11 +92,13 @@ const getChannelVideos = asyncHandler(async (req, res) => {
   try {
     // Get the total count of videos for the user
     const totalVideos = await Video.countDocuments({
-      owner: mongoose.Types.ObjectId(userId),
+      owner: new mongoose.Types.ObjectId(userId),
     });
 
     // Fetch videos with pagination
-    const videos = await Video.find({ owner: mongoose.Types.ObjectId(userId) })
+    const videos = await Video.find({
+      owner: new mongoose.Types.ObjectId(userId),
+    })
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber)
       .sort({ createdAt: -1 });
