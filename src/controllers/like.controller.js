@@ -23,18 +23,19 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
   });
 
   if (existingLike) {
-    await existingLike.remove();
+    await Like.deleteOne({ _id: existingLike._id });
     return res
       .status(200)
       .json(new ApiResponse(200, null, "Video is unlike successfully."));
-  } else {
-    const newLike = new Like({
-      video: videoId,
-      likedBy: user._id,
-    });
-    await newLike.save();
-    return res.status(200, newLike, "Video liked successfully.");
   }
+  const newLike = new Like({
+    video: videoId,
+    likedBy: user._id,
+  });
+  await newLike.save();
+  return res
+    .status(200)
+    .json(new ApiResponse(200, newLike, "Video liked successfully."));
 });
 
 const toggleCommentLike = asyncHandler(async (req, res) => {
@@ -51,22 +52,21 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
   });
 
   if (existingCommentLike) {
-    await existingCommentLike.remove();
+    await Like.deleteOne({ _id: existingCommentLike._id });
     return res
       .status(200)
       .json(new ApiResponse(200, null, "Comment unlike successfully."));
-  } else {
-    const newCommentLike = new Like({
-      comment: commentId,
-      likedBy: user._id,
-    });
-
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(200, newCommentLike, "Comment liked successfully.")
-      );
   }
+  const newCommentLike = new Like({
+    comment: commentId,
+    likedBy: user._id,
+  });
+
+  await newCommentLike.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, newCommentLike, "Comment liked successfully."));
 });
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
@@ -82,20 +82,21 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
   });
 
   if (existingTweetLike) {
-    await existingTweetLike.remove();
+    await Like.deleteOne({ _id: existingTweetLike._id });
     return res
       .status(200)
       .json(new ApiResponse(200, null, "Tweet unlike successfully."));
-  } else {
-    const newTweetLike = new Like({
-      tweet: tweetId,
-      likedBy: user._id,
-    });
-
-    return res
-      .status(200)
-      .json(new ApiResponse(200, newTweetLike, "Tweet liked successfully."));
   }
+  const newTweetLike = new Like({
+    tweet: tweetId,
+    likedBy: user._id,
+  });
+
+  await newTweetLike.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, newTweetLike, "Tweet liked successfully."));
 });
 
 const getLikedVideos = asyncHandler(async (req, res) => {
