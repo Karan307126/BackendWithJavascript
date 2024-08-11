@@ -22,7 +22,9 @@ const createPlaylist = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(200, newPlaylist, "New Playlist created successfully");
+    .json(
+      new ApiResponse(200, newPlaylist, "New Playlist created successfully")
+    );
 });
 
 const getUserPlaylists = asyncHandler(async (req, res) => {
@@ -31,9 +33,40 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
   if (!userId) throw new ApiError(400, "User Id is required");
   if (!isValidObjectId(userId)) throw new ApiError(400, "Invalid UserId");
 
-  const playlists = await Playlist.find({
-    owner: new mongoose.Types.ObjectId(userId),
-  });
+  const playlists = await Playlist.aggregate([
+    {
+      $match: {
+        owner: new mongoose.Types.ObjectId(userId),
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        description: 1,
+        owner: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        videos: {
+          $cond: {
+            if: {
+              $eq: ["$owner", new mongoose.Types.ObjectId(userId)],
+            },
+            then: "$videos",
+            else: {
+              $filter: {
+                input: "$videos",
+                as: "video",
+                cond: {
+                  $eq: ["$$video.isPublished", true],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  ]);
 
   if (playlists.length === 0)
     return res
@@ -53,13 +86,47 @@ const getPlaylistById = asyncHandler(async (req, res) => {
   if (!isValidObjectId(playlistId))
     throw new ApiError(400, "Invalid playlist id");
 
-  const playlist = await Playlist.findById(playlistId);
+  const playlist = await Playlist.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(playlistId),
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        description: 1,
+        owner: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        videos: {
+          $cond: {
+            if: {
+              $eq: ["$owner", req.user._id], // Assuming req.user._id is the current logged-in user
+            },
+            then: "$videos",
+            else: {
+              $filter: {
+                input: "$videos",
+                as: "video",
+                cond: {
+                  $eq: ["$$video.isPublished", true],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  ]);
 
-  if (!playlist) throw new ApiError(404, "Playlist not found");
+  if (!playlist || playlist.length === 0)
+    throw new ApiError(404, "Playlist not found");
 
   return res
     .status(200)
-    .json(new ApiResponse(200, playlist, "Playlist retrieved successfully"));
+    .json(new ApiResponse(200, playlist[0], "Playlist retrieved successfully"));
 });
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
