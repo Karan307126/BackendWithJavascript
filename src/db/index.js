@@ -4,7 +4,7 @@ import { DB_NAME } from "../constants.js";
 const dbConnect = async () => {
   try {
     const connectionInstance = await mongoose.connect(
-      `${process.env.MONGODB_URI}/${DB_NAME}`
+      `${process.env.MONGODB_URI}/${DB_NAME}?authSource=admin`
     );
     console.log(
       `\nMongoDB connected !! DB Host: ${connectionInstance.connection.host}`
