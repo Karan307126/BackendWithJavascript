@@ -4,16 +4,21 @@ FROM node:22-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and yarn.lock
+# Enable Yarn
+RUN corepack enable
+
+# Install production dependencies first
 COPY package.json yarn.lock ./
 
-# Install dependencies using Yarn (production only)
-RUN yarn install --production --frozen-lockfile
+RUN yarn install --frozen-lockfile --production \
+    && yarn cache clean
 
-# Copy the rest of the application code 
-COPY . .
+# Copy application
+COPY --chown=node:node . .
 
-# Build the application 
+# Don't run application as root
+USER node
+
 EXPOSE 8000
 
 # Start the application
